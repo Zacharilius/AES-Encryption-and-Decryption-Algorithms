@@ -1,0 +1,17 @@
+	/** 
+    * Algorithm EEA (Extended Euclidean algorithm)
+    * 
+    * @param a an (> 0) integer 
+    * @param b another (>= 0) integer 
+    * 
+    * @return int array (u,v) satisfying u*a + v*b = gcd(a,b)   
+    */
+    public int[] EEA(int a, int b){        
+        if(b == 0){             
+            return new int[]{1,0};                        
+        }else{
+            int q = a/b; int r = a%b;
+            int[] R = EEA(b,r);
+            return new int[]{R[1], R[0]-q*R[1]};
+        }
+    }
