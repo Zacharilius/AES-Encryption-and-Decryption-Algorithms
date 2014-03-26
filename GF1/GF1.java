@@ -27,6 +27,7 @@ public class GF1 {
 		outputText += divideMod(ia[1], ia[2], ia[0]);
 				
 		outputFile(outputText);
+		System.out.println(EEA(2,3)[0]);
 	}
 	/**
 	 * Inputs the selected file and stores it in an integer array
@@ -121,7 +122,11 @@ public class GF1 {
 		if(y == 0){
 			throw new ArithmeticException("ERROR: Cannot divide by Zero");
 		}
-		return (x * EEA(y, mod)[0]) % mod;
+		int r = (x * EEA(y, mod)[0]) % mod;
+		if (r < 0){
+			r = r + mod;
+		}
+		return r;
 	}	
 	/** 
     * Algorithm EEA (Extended Euclidean algorithm)
