@@ -27,7 +27,7 @@ public class GF1 {
 		outputText += divideMod(ia[1], ia[2], ia[0]);
 				
 		outputFile(outputText);
-		System.out.println(EEA(2,3)[0]);
+		System.out.println(EEA(2,5)[0]);
 	}
 	/**
 	 * Inputs the selected file and stores it in an integer array
