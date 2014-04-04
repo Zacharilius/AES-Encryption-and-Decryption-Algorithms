@@ -17,7 +17,9 @@ public class GF2 {
 	 */
 	public static void main(String[] args){		
 		//Input Files
+		//String[] sa = inputFile("input.txt");
 		String[] sa = inputFile("input.txt");
+
 		
 		//Parse input file into correct variables
 		int mod = Integer.parseInt(sa[0]); //prime number p
@@ -32,7 +34,7 @@ public class GF2 {
 		String outputText = "Output Text: \n";
 		outputText += addMod(fX, gX, mod) + "\n";		
 		outputText +=subtractMod(fX, gX, mod) + "\n";
-		//outputText += multiplyMod(fX, gX, mod) + "\n";
+		outputText += multiplyMod(fX, gX, mod) + "\n";
 		System.out.println(outputText);
 		/*
 		String divide = divdeMod(fX, Gx, mod);
@@ -111,37 +113,52 @@ public class GF2 {
 	* @return int	Returns the result
 	*/ 
 	public static String addMod(int[] x, int[] y, int mod){
+		int i = 0;
+		int j = 0;
+		int[] outArray;
 		//finds if x is larger than y
 		if(x.length > y.length){
-			int[] temp = y;
-			y = x;
-			x = temp;
+			outArray = new int[x.length];
+			while(i < y.length - 1){
+				outArray[i] = x[i++];
+			}
+
+
+			while(i < outArray.length){
+				outArray[i] = x[i++] + y[j++];
+
+			}
 		}
-		
-		//Create array of larger degree
-		int[] outArray = new int[y.length];
-		//while int i = degree > lowerDegree add into newArray
-		int i = y.length - 1;
-		while(i > x.length){
-			outArray[i] = y[i];
-			i--;
+		else if(y.length > x.length){
+			outArray = new int[y.length];
+			while(i < x.length - 1){
+				outArray[i] = y[i++];
+			}
+
+			while(i < outArray.length){
+				outArray[i] = x[j++] + y[i++];
+
+			}		
+		}
+		else{
+			outArray = new int[x.length];
+			while(j < outArray.length){
+				outArray[j] = x[j] + y[j];
+				j++;
+			}
 		}
 
-		//while i >= 0 add both other arrays
-		while(i >= 0){
-			outArray[i] = x[i] + y[i];
-			i--;
-		}
 		
 		makeModPositive(outArray, mod);
 		outArray = removeLeadingZeros(outArray);
 	
 		String s = "";
-		for(int j = outArray.length - 1; j >= 0; j --){
-			s += outArray[j] + " ";
+		for(int k = 0; k < outArray.length; k ++){
+			s += outArray[k] + " ";
 		}
 		return s;
 	}
+	
 	
 	/**
 	*  This method subtracts the y integer from the x integer and then performs modulo with
@@ -154,93 +171,81 @@ public class GF2 {
 	* @return int	Returns the result
 	*/ 
 	public static String subtractMod(int[] x, int[] y, int mod){
+		int i = 0;
+		int j = 0;
+		int[] outArray;
 		//finds if x is larger than y
 		if(x.length > y.length){
-			int[] temp = y;
-			y = x;
-			x = temp;
-		}
-		
-		//Create array of larger degree
-		int[] outArray = new int[y.length];
-		//while int i = degree > lowerDegree add into newArray
-		int i = y.length - 1;
-		while(i > x.length){
-			outArray[i] = y[i];
-			i--;
-		}
+			outArray = new int[x.length];
+			while(i < y.length - 1){
+				outArray[i] = x[i++] - 0;
+			}
 
-		//while i >= 0 add both other arrays
-		while(i >= 0){
-			outArray[i] = x[i] - y[i];
-			i--;
+
+			while(i < outArray.length){
+				outArray[i] = x[i++] - y[j++];
+
+			}
+		}
+		else if(y.length > x.length){
+			outArray = new int[y.length];
+			while(i < x.length - 1){
+				outArray[i] = 0 - y[i++];
+			}
+
+			while(i < outArray.length){
+				outArray[i] = x[j++] - y[i++];
+
+			}		
+		}
+		else{
+			outArray = new int[x.length];
+			while(j < outArray.length){
+				outArray[j] = x[j] - y[j++];
+			}
 		}
 		
 		makeModPositive(outArray, mod);
 		outArray = removeLeadingZeros(outArray);
 	
 		String s = "";
-		for(int j = 0; j < outArray.length; j ++){
-			s += outArray[j] + " ";
+		for(int k = 0; k < outArray.length; k ++){
+			s += outArray[k] + " ";
 		}
 		return s;
 	}
+
 	/**  This method multiplies the x integer and the y integer and then performs modulo with
 	*  the mod variable mod.
 	*
-	* @param int 	x	A number to be multiplied
-	* @param int	y	A number to be multiplied
+	* @param int 	f	A number to be multiplied
+	* @param int	g	A number to be multiplied
 	* @param int	mod	The modulo value 
 	*
 	* @return int	Returns the result
 	*/ 
-	public static String multiplyMod(int[] x, int[] y, int mod){
-		//finds if x is larger than y
-		if(x.length > y.length){
-			int[] temp = y;
-			y = x;
-			x = temp;
+	public static String multiplyMod(int[] f, int[] g, int mod){
+		//Find size of new array
+		int[] outArray = new int[(f.length - 1) + (g.length - 1) + 1];
+		System.out.println("outArrayLength: " + outArray.length);
+		for(int i = f.length - 1; i >= 0; i--){
+			for(int j = g.length - 1; j >= 0; j--){
+				System.out.println("i: " + i + " j: " + j + " f[i] " + f[i] + " g[j] " + g[j]);
+				outArray[i + j] += f[i] * g[j];
+			}
 		}
 		
-		//Create array of larger degree
-		int[] outArray = new int[y.length];
-		//while int i = degree > lowerDegree add into newArray
-		int i = y.length - 1;
-		while(i > x.length){
-			outArray[i] = y[i];
-			i--;
-		}
-
-		//while i >= 0 add both other arrays
-		while(i >= 0){
-			outArray[i] = x[i] * y[i];
-			i--;
-		}
 		
 		makeModPositive(outArray, mod);
-	
+		outArray = removeLeadingZeros(outArray);
+
 		String s = "";
-		for(int j = outArray.length - 1; j >= 0; j --){
-			s += outArray[j] + " ";
+		for(int k = 0; k < outArray.length; k++){
+			s += outArray[k] + " ";
 		}
 		return s;
 	}
-	/**
-	*  This method divides the x integer by the y integer and then performs modulo with
-	*  the mod variable mod. If y == 0, it throws an Arithmetic Exception.
-	*
-	* @param int 	x	The numerator
-	* @param int	y	The denominator
-	* @param int	mod	The modulo value 
-	*
-	* @return int	Returns the result
-	*
-	* @throw 	ArithmeticException	If the y is 0. Throws because cannot divide by 0.
-	*/
-	public static void foil(int[] f, int[]g){
 	
-	
-	}
 	/**
 	*  This method divides the x integer by the y integer and then performs modulo with
 	*  the mod variable mod. If y == 0, it throws an Arithmetic Exception.
@@ -253,15 +258,17 @@ public class GF2 {
 	*
 	* @throw 	ArithmeticException	If the y is 0. Throws because cannot divide by 0.
 	*/ 
-	public static int divideMod(int x, int y, int mod){
-		if(y == 0){
-			throw new ArithmeticException("ERROR: Cannot divide by Zero");
+	public static String divideMod(int[] f, int[] g, int mod){
+		//Check if any g values are 0
+		int i = 0;
+		while(i < g.length){
+			if(g[i] == 0){
+				throw new ArithmeticException("ERROR: Cannot divide by Zero");
+			}
 		}
-		int r = (x * EEA(y, mod)[0]) % mod;
-		if (r < 0){
-			r = r + mod;
-		}
-		return r;
+		
+
+		return "";
 	}	
 	/** 
     * Algorithm EEA (Extended Euclidean algorithm)
@@ -306,21 +313,16 @@ public class GF2 {
     public static int[] removeLeadingZeros(int[] a){ 
 		int i = 0;
 		boolean swap = false;
-		System.out.println("Test: " + a[0]);
-		System.out.println("Test: " + a[1]);
 		while(i < a.length && a[i] == 0){
-			System.out.println("Tada");
 			swap = true;
 			++i;
 		}
 		if(swap){
 			int[] newA = new int[a.length - i];
 			while(i < a.length){
-				System.out.println("Here");
 				newA[i-1] = a[i]; 
 				i++;
 			}
-
 			return newA;
 		}
 		return a;
@@ -341,4 +343,89 @@ public class GF2 {
             out.close();
         }
     }
+	/**
+	* PLDA (Polynomial long division algorithm) over GF(p)
+	*
+	* @param n(x) a polynomial 
+	* @param d(x) a non-zero polynomial 
+	* @param p a prime number 
+	*
+	* @return quotient q(x) and remainder r(x) such that n(x) = q(x)*d(x) + r(x) mod p where deg(r(x)) < deg(d(x))
+	*/
+	public static void PLDA(int[] nX, int[] dX, int p){
+		nX = PLDA_Helper(nX, p);
+		dX = PLDA_Helper(dX, p);
+		
+		int qX = 0;
+		int[] rX = nX;
+		
+		while(rX != null && rX.length >= dX.length){
+			int[] tX = leadDivision(rX , dX);
+			
+		
+		} 	
+	
+	}
+	private static void modPLDA(int[] ia, int p){
+		int i = 0;
+		while(i < ia.length){
+			ia[i] %=  p
+			if(ia[i] < 0){
+				ia[i] + p
+			}
+			i++;
+		}
+	}
+	private static int[] leadDivision(int[] a, int[] b){
+		int[] outArr = new int[(a.length - 1) - (b.length - 1) + 1];
+		int mult = 0;
+		if(a[0] % b[0] != 0){
+			mult =  EEA(a[0], b[0]);
+		}
+		else{
+			mult = a[0] / b[0];
+		}
+		outArr[0] = mult * 
+		
+	
+	}
+/**
+	PLDA(n(x), d(x))
+		n(x) = n(x) mod p // perform mod p to every coefficient of n(x)
+		d(x) = d(x) mod p // perform mod p to every coefficient of d(x) 
+		(q(x), r(x)) <- (0, n(x))            
+		while r(x) != 0 and deg(r(x)) >= deg(d(x)) do
+			t(x) <- lead(r(x))/lead(d(x))	
+					//lead() returns the leading term of a polynomial; the division requires EEA. 
+				 	//E.g. if r(x) = 2x^2 + x + 1, d(x) = 3x + 2, and p = 7,   
+				 	//then lead(r(x)) = 2x^2, lead(d(x)) = 3x,
+				 	//thus t(x) = 2x^2/3x = (2/3)(x^2/x) = 3x, 
+					//here it needs EEA to compute 2/3 mod 7 = 3.
+				 
+			(q(x), r(x)) <- (q(x) + t(x) mod p, r(x) - t(x)*d(x) mod p)			
+		return (q(x), r(x))
+*/
+	
+/** 
+* EEAP (Extended Euclidean Algorithm for Polynomials) over GF(p)
+*
+* @param a(x) a polynomial  
+* @param b(x) another polynomial
+* @param p a prime number   
+*
+* @return polynomial array (u(x),v(x)) satisfying u(x)*a(x) + v(x)*b(x) = gcd(a(x),b(x)) mod p
+*/
+/**
+	EEAP(a(x), b(x))
+		a(x) = a(x) mod p // perform mod p to the coefficients of a(x)
+		b(x) = b(x) mod p // perform mod p to the coefficients of b(x)
+		if b(x) = 0 then
+			return (1/(leading coefficient of a(x)), 0) // gcd(a(x),0) should be monic 
+		else
+			Q = PLDA(a(x), b(x))
+			q(x) = Q[0] and r(x) = Q[1]
+			R = EEAP(b(x), r(x))			
+			return (R[1] mod p, R[0]-q*R[1] mod p)   
+			
+*/			
 }
