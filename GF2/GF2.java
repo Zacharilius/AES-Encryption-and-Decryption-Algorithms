@@ -32,9 +32,9 @@ public class GF2 {
 		
 		// fX _ gX
 		String outputText = "Output Text: \n";
-		outputText += addMod(fX, gX, mod) + "\n";		
-		outputText +=subtractMod(fX, gX, mod) + "\n";
-		outputText += multiplyMod(fX, gX, mod) + "\n";
+		outputText += toString(addMod(fX, gX, mod)) + "\n";		
+		outputText += toString(subtractMod(fX, gX, mod)) + "\n";
+		outputText += toString(multiplyMod(fX, gX, mod)) + "\n";
 		System.out.println(outputText);
 		/*
 		String divide = divdeMod(fX, Gx, mod);
@@ -112,7 +112,7 @@ public class GF2 {
 	*
 	* @return int	Returns the result
 	*/ 
-	public static String addMod(int[] x, int[] y, int mod){
+	public static int[] addMod(int[] x, int[] y, int mod){
 		int i = 0;
 		int j = 0;
 		int[] outArray;
@@ -152,11 +152,7 @@ public class GF2 {
 		makeModPositive(outArray, mod);
 		outArray = removeLeadingZeros(outArray);
 	
-		String s = "";
-		for(int k = 0; k < outArray.length; k ++){
-			s += outArray[k] + " ";
-		}
-		return s;
+		return outArray;
 	}
 	
 	
@@ -170,7 +166,7 @@ public class GF2 {
 	*
 	* @return int	Returns the result
 	*/ 
-	public static String subtractMod(int[] x, int[] y, int mod){
+	public static int[] subtractMod(int[] x, int[] y, int mod){
 		int i = 0;
 		int j = 0;
 		int[] outArray;
@@ -208,11 +204,7 @@ public class GF2 {
 		makeModPositive(outArray, mod);
 		outArray = removeLeadingZeros(outArray);
 	
-		String s = "";
-		for(int k = 0; k < outArray.length; k ++){
-			s += outArray[k] + " ";
-		}
-		return s;
+		return outArray;
 	}
 
 	/**  This method multiplies the x integer and the y integer and then performs modulo with
@@ -224,7 +216,7 @@ public class GF2 {
 	*
 	* @return int	Returns the result
 	*/ 
-	public static String multiplyMod(int[] f, int[] g, int mod){
+	public static int[] multiplyMod(int[] f, int[] g, int mod){
 		//Find size of new array
 		int[] outArray = new int[(f.length - 1) + (g.length - 1) + 1];
 		System.out.println("outArrayLength: " + outArray.length);
@@ -238,12 +230,7 @@ public class GF2 {
 		
 		makeModPositive(outArray, mod);
 		outArray = removeLeadingZeros(outArray);
-
-		String s = "";
-		for(int k = 0; k < outArray.length; k++){
-			s += outArray[k] + " ";
-		}
-		return s;
+		return outArray;
 	}
 	
 	/**
@@ -327,6 +314,13 @@ public class GF2 {
 		}
 		return a;
     }
+    public static String toString(int[] outArray){
+    	String s = "";
+		for(int k = 0; k < outArray.length; k++){
+			s += outArray[k] + " ";
+		}
+		return s;
+    }
 	/**
 	*  This method outputs the specified string to output.txt file in the same folder 
 	*
@@ -352,42 +346,71 @@ public class GF2 {
 	*
 	* @return quotient q(x) and remainder r(x) such that n(x) = q(x)*d(x) + r(x) mod p where deg(r(x)) < deg(d(x))
 	*/
-	public static void PLDA(int[] nX, int[] dX, int p){
-		nX = PLDA_Helper(nX, p);
-		dX = PLDA_Helper(dX, p);
+
+	public static int[][] PLDA(int[] nX, int[] dX, int p){
+		modPLDA(nX, p);
+		modPLDA(dX, p);
 		
-		int qX = 0;
+		int[] qX = {0};
 		int[] rX = nX;
 		
 		while(rX != null && rX.length >= dX.length){
 			int[] tX = leadDivision(rX , dX);
-			
-		
-		} 	
-	
+			qX = addMod(qX, tX, p);
+			modPLDA(qX, p);
+			//rX = subtractMod(rX, multiplyMod(tX, dX));
+			modPLDA(rX, p);
+			rX = null;	
+		} 
+		return new int[][] {qX, rX};	
 	}
 	private static void modPLDA(int[] ia, int p){
 		int i = 0;
 		while(i < ia.length){
-			ia[i] %=  p
+			ia[i] %=  p;
 			if(ia[i] < 0){
-				ia[i] + p
+				ia[i] += p;
 			}
 			i++;
-		}
+		} 
 	}
 	private static int[] leadDivision(int[] a, int[] b){
 		int[] outArr = new int[(a.length - 1) - (b.length - 1) + 1];
-		int mult = 0;
+		int[] mult = new int[2];
 		if(a[0] % b[0] != 0){
-			mult =  EEA(a[0], b[0]);
+			mult =  EEA(5, 5);
 		}
 		else{
-			mult = a[0] / b[0];
+			mult[0] = a[0] / b[0];
 		}
-		outArr[0] = mult * 
+		outArr[0] = mult[1];
+		return outArr;
 		
 	
+	}
+	public static int[] EEAP(int[] aX, int[] bX, int p){
+		modPLDA(aX, p);
+		modPLDA(bX, p);
+		
+		int i = 0;
+		boolean b = true;
+		while(i < bX.length && b){
+			if(bX[i] != 0){
+				b = false;
+			}
+		} 
+		if(b){ //Not right. did to compile
+			return new int[] {1 / aX[0], 0};
+		}
+		else{
+			int[][] Q = PLDA(aX, bX, p);
+			int[] qX = Q[0];
+			int[] rX = Q[1];
+			int[] R = EEAP(bX, rX, p);
+			return new int[] {R[1] % p, (R[0] - qX * R[1]) % p};
+		}
+		
+		
 	}
 /**
 	PLDA(n(x), d(x))
