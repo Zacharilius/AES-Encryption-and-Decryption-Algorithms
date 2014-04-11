@@ -30,12 +30,16 @@ public class GF2 {
 		int gXDegree = Integer.parseInt(sa[5]); //degree of g(x)
 		int[] gX = getPoly(gXDegree, sa[6]); // coefficients of g(x),from leading coefficient to the constant
 		
+		//Add a check to see if they all have values
+		
 		// fX _ gX
+		/*
 		String outputText = "Output Text: \n";
 		outputText += toString(addMod(fX, gX, mod)) + "\n";		
 		outputText += toString(subtractMod(fX, gX, mod)) + "\n";
-		outputText += toString(multiplyMod(fX, gX, mod)) + "\n";
+		outputText += toString(multiplyMod(multiply(fX, gX, mod), mX, mod)) + "\n";
 		System.out.println(outputText);
+		*/
 		/*
 		String divide = divdeMod(fX, Gx, mod);
 		String outputText = "";
@@ -47,6 +51,10 @@ public class GF2 {
 		outputFile(outputText);
 		System.out.println(EEA(2,5)[0]);
 		*/
+		
+		
+		//Testing
+		int[] lDivTest = leadDivision(new int[] {2,2,2}, new int[] {1,1,1});
 	}
 	/**
 	 * Inputs the selected file and stores it in an integer array
@@ -122,8 +130,6 @@ public class GF2 {
 			while(i < y.length - 1){
 				outArray[i] = x[i++];
 			}
-
-
 			while(i < outArray.length){
 				outArray[i] = x[i++] + y[j++];
 
@@ -136,6 +142,10 @@ public class GF2 {
 			}
 
 			while(i < outArray.length){
+				System.out.println("outArray.length: " + outArray.length);
+				System.out.println("x.length: " + x.length);
+				System.out.println("y.length: " + y.length);
+
 				outArray[i] = x[j++] + y[i++];
 
 			}		
@@ -148,7 +158,6 @@ public class GF2 {
 			}
 		}
 
-		
 		makeModPositive(outArray, mod);
 		outArray = removeLeadingZeros(outArray);
 	
@@ -216,21 +225,24 @@ public class GF2 {
 	*
 	* @return int	Returns the result
 	*/ 
-	public static int[] multiplyMod(int[] f, int[] g, int mod){
+	public static int[] multiply(int[] f, int[] g, int mod){
 		//Find size of new array
-		int[] outArray = new int[(f.length - 1) + (g.length - 1) + 1];
-		System.out.println("outArrayLength: " + outArray.length);
+		int[] multArr = new int[(f.length - 1) + (g.length - 1) + 1];
 		for(int i = f.length - 1; i >= 0; i--){
 			for(int j = g.length - 1; j >= 0; j--){
-				System.out.println("i: " + i + " j: " + j + " f[i] " + f[i] + " g[j] " + g[j]);
-				outArray[i + j] += f[i] * g[j];
+				multArr[i + j] += f[i] * g[j];
 			}
 		}
+		return multArr;
 		
-		
+	}
+	public static int[] multiplyMod(int[] multArray, int[] mX, int mod){
+		//PLDA(outArray,mX,p)[1]; //Need remainder. See page 132 book PLDA(mX, outArray)
+		int[] outArray = PLDA(mX, multArray, mod)[1];
 		makeModPositive(outArray, mod);
 		outArray = removeLeadingZeros(outArray);
 		return outArray;
+	
 	}
 	
 	/**
@@ -245,17 +257,11 @@ public class GF2 {
 	*
 	* @throw 	ArithmeticException	If the y is 0. Throws because cannot divide by 0.
 	*/ 
-	public static String divideMod(int[] f, int[] g, int mod){
-		//Check if any g values are 0
-		int i = 0;
-		while(i < g.length){
-			if(g[i] == 0){
-				throw new ArithmeticException("ERROR: Cannot divide by Zero");
-			}
-		}
+	public static int[] division(int[] fX, int[] gX, , int[] mX, int mod){
+		//Compute 1 g(x)
+		PLDA(gX, mX){
 		
-
-		return "";
+		}
 	}	
 	/** 
     * Algorithm EEA (Extended Euclidean algorithm)
@@ -342,6 +348,7 @@ public class GF2 {
 	*
 	* @param n(x) a polynomial 
 	* @param d(x) a non-zero polynomial 
+	* @param m(x) a ??????????
 	* @param p a prime number 
 	*
 	* @return quotient q(x) and remainder r(x) such that n(x) = q(x)*d(x) + r(x) mod p where deg(r(x)) < deg(d(x))
@@ -355,16 +362,16 @@ public class GF2 {
 		int[] rX = nX;
 		
 		while(rX != null && rX.length >= dX.length){
-			int[] tX = leadDivision(rX , dX);
+			int[] tX = leadDivision(rX , dX);			
 			qX = addMod(qX, tX, p);
 			modPLDA(qX, p);
-			//rX = subtractMod(rX, multiplyMod(tX, dX));
+			rX = subtractMod(rX, multiply(tX, dX, p), p);
 			modPLDA(rX, p);
-			rX = null;	
 		} 
 		return new int[][] {qX, rX};	
 	}
-	private static void modPLDA(int[] ia, int p){
+
+	private static int[] modPLDA(int[] ia, int p){
 		int i = 0;
 		while(i < ia.length){
 			ia[i] %=  p;
@@ -373,21 +380,25 @@ public class GF2 {
 			}
 			i++;
 		} 
+		return ia;
 	}
+
 	private static int[] leadDivision(int[] a, int[] b){
-		int[] outArr = new int[(a.length - 1) - (b.length - 1) + 1];
-		int[] mult = new int[2];
+		System.out.println("a.length: " + a.length);
+		System.out.println("b.length: " + b.length);
+		int[] outArr = new int[Math.abs((a.length - 1) - (b.length - 1)) + 1];
+		System.out.println("outArr.length: " + outArr.length);
+		int mult;
 		if(a[0] % b[0] != 0){
-			mult =  EEA(5, 5);
+			mult =  EEA(a[0], b[0])[1];
+			outArr[0] = mult * ;
 		}
 		else{
 			mult[0] = a[0] / b[0];
 		}
-		outArr[0] = mult[1];
 		return outArr;
-		
-	
 	}
+/*
 	public static int[] EEAP(int[] aX, int[] bX, int p){
 		modPLDA(aX, p);
 		modPLDA(bX, p);
@@ -407,11 +418,15 @@ public class GF2 {
 			int[] qX = Q[0];
 			int[] rX = Q[1];
 			int[] R = EEAP(bX, rX, p);
-			return new int[] {R[1] % p, (R[0] - qX * R[1]) % p};
+			int[] outR1 = modPLDA(R[1], p);
+			int[] outR0 = subMod(R[0], multiplyMod(qX, R[1], p), p);
+			return new int[] {outR1, outR0};
+			//R[0]-q*R[1] mod p)
 		}
 		
 		
 	}
+*/
 /**
 	PLDA(n(x), d(x))
 		n(x) = n(x) mod p // perform mod p to every coefficient of n(x)

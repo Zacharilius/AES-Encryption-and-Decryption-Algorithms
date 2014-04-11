@@ -1,0 +1,33 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+
+public class GF2 {
+
+	public static void main(String[] args) {
+		//Input Files
+		String[] sa = inputFile("input.txt");
+	}
+	public static String[] inputFile(String fileName){
+		String[] sa = new String[7];
+		String line = "";
+		
+        try (BufferedReader in = new BufferedReader(new FileReader(fileName))) {
+            int i = 0;
+            while((line = in.readLine()) != null){
+            	System.out.println("Line: " + line);
+                sa[i] = line;
+                i++;
+            }
+        }
+        catch (IOException e) {
+            System.out.println("inputFile() ERROR");
+        }
+        finally {
+            return sa;
+        }
+        
+        
+	}
+}

@@ -1,0 +1,9 @@
+
+public class GF2 {
+
+	public static void main(String[] args) {
+		//Input Files
+		String[] sa = inputFile("input.txt");
+	}
+
+}
