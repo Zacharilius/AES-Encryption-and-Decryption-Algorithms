@@ -10,7 +10,7 @@ public class GF2 {
 		String[] sa = inputFile("input.txt");
 		
 		//Parse input file into correct variables
-		int mod = Integer.parseInt(sa[0]); //prime number p
+		int p = Integer.parseInt(sa[0]); //prime number p
 		int mXDegree = Integer.parseInt(sa[1]); //degree of irreducible polynomial
 		int[] mX = getPoly(mXDegree, sa[2]); //coefficients of m(x) from leading to constant
 		int fXDegree = Integer.parseInt(sa[3]); //degree of f(x)
@@ -20,10 +20,43 @@ public class GF2 {
 		
 		//Get output
 		String outputText = "Output Text: \n";
-		outputText += toString(addMod(fX, gX, mod)) + "\n";		
-		outputText += toString(subtractMod(fX, gX, mod)) + "\n";
+		outputText += toString(addMod(fX, gX, p)) + "\n";		
+		outputText += toString(subtractMod(fX, gX, p)) + "\n";
+		outputText += toString(PLDA(multiply(fX, gX, p),mX, p)[1]) + "\n";
+		//outputText += toString(PLDA(multiply(fX, EEAP(gX, mX, p)[0], p),mX, p)[1]) + "\n";
+
 		System.out.println(outputText);
-	
+		//*/
+		
+		//TESTING
+		System.out.println("Testing: ");
+		int[] fTestX = {1,1};
+		int[] gTextX = {2,1};
+		int[] mTestX = {1,0,1};
+		int pTest = 3;
+		System.out.println(toString(PLDA(multiply(fTestX, EEAP(gTextX, mTestX, pTest)[0], pTest),mTestX, pTest)[1]) + "\n");
+
+		
+		
+		
+		
+		
+		//System.out.println(toString(makeModPositive(multiply(new int[] {1, 0, 1, 0 ,1, 1, 1}, new int[] {1,0,0,0,0,0,1,1}, 2),2)) + "\n");
+
+		//System.out.println(toString(PLDA(new int[] {1,0,0,0,1,1,0,1,1}, multiply(new int[] {1,0,1,0,1,1,1}, new int[] {1,0,0,0,0,0,1,1}, 2), 2)[0]) + "\n");
+		//System.out.println(toString(PLDA(new int[] {1,0,0,0,1,1,0,1,1}, multiply(new int[] {1,0,1,0,1,1,1}, new int[] {1,0,0,0,0,0,1,1}, 2), 2)[0]) + "\n");
+
+
+		/*
+		int testA = 1;
+		int testB = 2;
+		System.out.println("EEA: " + leadDivision(new int[] {testA}, new int[] {testB})[0]);
+		System.out.println("Lead Div: " + leadDivision(new int[] {testA}, new int[] {testB})[0]);
+		System.out.println("removeLeadingZeroes: " + toString(removeLeadingZeros(new int[] {1})));
+		System.out.println("removeLeadingZeroes: " + toString(removeLeadingZeros(new int[] {0,1})));
+		System.out.println("removeLeadingZeroes: " + toString(removeLeadingZeros(new int[] {0,0,0,1,0,1})));
+		System.out.println("removeLeadingZeroes: " + toString(removeLeadingZeros(new int[] {0,0,1})));
+		*/
 	}
 	public static String[] inputFile(String fileName){
 		String[] sa = new String[7];
@@ -66,6 +99,8 @@ public class GF2 {
 		int i = 0;
 		int j = 0;
 		int[] outArray;
+		System.out.println("x.length: " + x.length);
+		System.out.println("y.length: " + y.length);
 		//finds if x is larger than y
 		if(x.length > y.length){
 			outArray = new int[x.length];
@@ -84,10 +119,6 @@ public class GF2 {
 			}
 
 			while(i < outArray.length){
-				System.out.println("outArray.length: " + outArray.length);
-				System.out.println("x.length: " + x.length);
-				System.out.println("y.length: " + y.length);
-
 				outArray[i] = x[j++] + y[i++];
 
 			}		
@@ -153,6 +184,8 @@ public class GF2 {
 					multArr[i + j] += fX[i] * gX[j];
 				}
 			}
+			makeModPositive(multArr, p);//just added
+			multArr = removeLeadingZeros(multArr);//just added
 			return multArr;
 	    }
 	    public static int[] divide(int[] fX, int[] gX, int p){
@@ -183,7 +216,7 @@ public class GF2 {
 	    * @param mod The modulo value for the equation.
 	 
 	    */
-	    public static void makeModPositive(int[] a, int mod){        
+	    public static int[] makeModPositive(int[] a, int mod){        
 	    	for(int i = 0; i < a.length; i++){
 	    		a[i] = a[i] % mod;
 	    	}
@@ -192,6 +225,7 @@ public class GF2 {
 	    			a[j] = a[j] + mod;
 	    		}
 	    	}
+	    	return a;
 	    }
 	    
 		/** 
@@ -202,15 +236,23 @@ public class GF2 {
 	    public static int[] removeLeadingZeros(int[] a){ 
 			int i = 0;
 			boolean swap = false;
+			//{0,0,1}
+			//i = 0 & a[0] = 0
+			//i = 1 & a[0] = 0
+			//i = 2
 			while(i < a.length && a[i] == 0){
 				swap = true;
 				++i;
 			}
+			if(a.length == 1 && swap){
+				return new int[] {0};
+			}
 			if(swap){
 				int[] newA = new int[a.length - i];
+				//a.length = 3 - 2 = 1;
+				int j = 0;
 				while(i < a.length){
-					newA[i-1] = a[i]; 
-					i++;
+					newA[j++] = a[i++]; 
 				}
 				return newA;
 			}
@@ -236,28 +278,42 @@ public class GF2 {
 	    public static int[][] PLDA(int[] nX, int[] dX, int p){
 			makeModPositive(nX, p);
 			makeModPositive(dX, p);
-			
+			//System.out.println("nX: " + toString(nX)); //test
+			//System.out.println("dX: " + toString(dX)); //test
 			int[] qX = {0};
 			int[] rX = nX.clone();
-			
-			while(rX[0] != 0 && (rX.length-1) >= (dX.length-1)){
+			int i = 0; //TEST
+			while(rX[0] != 0 && (rX.length-1) >= (dX.length-1) && i < 5){
+				//System.out.println("Loop" + i);
 				int[] tX = leadDivision(rX, dX);
+				//System.out.println("tX.length: " + tX.length);
+				//System.out.println(toString(tX)); //test
 				qX = addMod(qX, tX, p);
-				rX = subtractMod(rX, multiply(tX, dX, p), p);
-				rX[0] = 0;
-				
+				//System.out.println(toString(qX)); //test
+				rX = subtractMod(rX, multiply(tX, dX, p), p);	
+				//System.out.println(toString(rX)); //test
+				i++; //TEST
 			}
 			return new int[][] {qX, rX};
-	    	//return new int[][] {};//Dummy return
 	    }
-	    private static int[] leadDivision(int[] rX, int[] dX){
+	    public static int[] leadDivision(int[] rX, int[] dX){
+	    	if(dX.length > rX.length){
+	    		throw new IllegalArgumentException("leadDivision: dX > rX"); 		
+	    	}
 			int[] outArr = new int[Math.abs((rX.length - 1) - (dX.length - 1)) + 1];
-	    	
-			
+			if(rX[0] % dX[0] != 0){
+				outArr[0] = EEA(rX[0], dX[0])[0];
+			}
+			else{
+				outArr[0] = rX[0] / dX[0];
+				
+			}
+			System.out.println("leadDiv: " + toString(outArr));
+			return outArr;
+						
 			//Write code that replaces all values after leading digit with 0s.
 			//Then call PLDA on leading digits
 			//Return resultOfPLDA[1];
-			return rX;
 	    }
 /**
 	    	PLDA(n(x), d(x))
@@ -286,8 +342,28 @@ public class GF2 {
 	    * @return polynomial array (u(x),v(x)) satisfying u(x)*a(x) + v(x)*b(x) = gcd(a(x),b(x)) mod p
 	    */
 	    public static int[][] EEAP(int[] aX, int[] bX, int p){
-	    			
-	    	return new int[][] {};
+	  	    aX = makeModPositive(aX, p);
+	    	bX = makeModPositive(bX, p);
+    		System.out.println("aX: " + toString(aX));	    		
+    		System.out.println("bX: " + toString(bX));
+	    	if(bX[0] == 0){
+	    		if(aX[0] != 1){
+	    			throw new IllegalArgumentException("aX[0] is not monic!!!");
+	    		}
+	    		return new int[][] {{1 / aX[0]}, {0}};//{[1/aX[0], 0]};  ///NNEEEEDDDSSSS FIXED
+	    	}
+	    	else{
+	    		int[][] Q = PLDA(aX, bX, p);
+	    		System.out.println("Q[0]: " + toString(Q[0]));
+	    		System.out.println("Q[1]: " + toString(Q[1]));
+
+	    		int[] qX = removeLeadingZeros(Q[0]);
+	    		int[] rX = removeLeadingZeros(Q[1]);
+	    		System.out.println("qX: " + toString(qX));
+	    		System.out.println("rX: " + toString(rX));
+	    		int[][] R = EEAP(bX, rX, p);
+		    	return new int[][] {makeModPositive(R[1], p), subtractMod(R[0], multiply(qX, R[1], p),p)};
+	    	}
 	    }
 /*
 	    	EEAP(a(x), b(x))
