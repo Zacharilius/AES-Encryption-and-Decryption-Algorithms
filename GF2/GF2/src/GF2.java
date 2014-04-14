@@ -7,7 +7,7 @@ public class GF2 {
 
 	public static void main(String[] args) {
 		//Input Files
-		String[] sa = inputFile("input.txt");
+		String[] sa = inputFile("input2.txt");
 		
 		//Parse input file into correct variables
 		int p = Integer.parseInt(sa[0]); //prime number p
@@ -23,29 +23,40 @@ public class GF2 {
 		outputText += toString(addMod(fX, gX, p)) + "\n";		
 		outputText += toString(subtractMod(fX, gX, p)) + "\n";
 		outputText += toString(PLDA(multiply(fX, gX, p),mX, p)[1]) + "\n";
+		//String eS = toString(EEAP(gX, mX, p)[0]);
+		//String mS = toString(multiply(fX, EEAP(gX, mX, p)[0],p));
+	
 		//outputText += toString(PLDA(multiply(fX, EEAP(gX, mX, p)[0], p),mX, p)[1]) + "\n";
-
+		//System.out.println("EEAP: " + eS);
+		//System.out.println("multiply: " + mS);
 		System.out.println(outputText);
-		//*/
 		
 		//TESTING
 		System.out.println("Testing: ");
-		int[] fTestX = {1,1};
-		int[] gTextX = {2,1};
-		int[] mTestX = {1,0,1};
-		int pTest = 3;
-		System.out.println(toString(PLDA(multiply(fTestX, EEAP(gTextX, mTestX, pTest)[0], pTest),mTestX, pTest)[1]) + "\n");
-
+		int[] fTestX = {1};
+		int[] gTestX = {1,0,0,0,0,0,1,1};
+		int[] mTestX = {1,0,0,0,1,1,0,1,1};
+		int pTest = 2;
+		//PLDA(3x + 2, 5x3 + 5x2 +3)
+		//System.out.println("PLDA: " + toString(PLDA(fTestX, gTestX, pTest)[0]) + ", " + toString(PLDA(fTestX, gTestX, pTest)[1]));
+		//Multiplication
+		//System.out.println("add: " + toString(addMod(fTestX, gTextX, pTest)) + "\n");		
+		//System.out.println("subtract: " + toString(subtractMod(fTestX, gTextX, pTest)) + "\n");
+		//System.out.println("Multiply: " + toString(PLDA(multiply(fTestX, gTestX, pTest),mTestX, pTest)[1]));
 		
-		
-		
-		
-		
+		//Division 
+		int[][] temp = EEAP(mTestX, gTestX, pTest);
+		System.out.println("EEAP[0]" + toString(temp[0])+ "\n");
+		System.out.println("EEAP[1]" + toString(temp[1])+ "\n");
 		//System.out.println(toString(makeModPositive(multiply(new int[] {1, 0, 1, 0 ,1, 1, 1}, new int[] {1,0,0,0,0,0,1,1}, 2),2)) + "\n");
-
-		//System.out.println(toString(PLDA(new int[] {1,0,0,0,1,1,0,1,1}, multiply(new int[] {1,0,1,0,1,1,1}, new int[] {1,0,0,0,0,0,1,1}, 2), 2)[0]) + "\n");
-		//System.out.println(toString(PLDA(new int[] {1,0,0,0,1,1,0,1,1}, multiply(new int[] {1,0,1,0,1,1,1}, new int[] {1,0,0,0,0,0,1,1}, 2), 2)[0]) + "\n");
-
+		/*
+		int[] fTestX = {1,0,1};
+		int[] gTextX = {2,1};
+		int[] mTestX = {2,1};
+		int pTest = 3;
+		System.out.println("PLDA: " + toString(PLDA(fTestX, mTestX, pTest)[1]) + "\n");
+*/	
+		//System.out.println("EEA: " + EEA(2,3)[0] + ", " + EEA(2,3)[1]);
 
 		/*
 		int testA = 1;
@@ -101,10 +112,13 @@ public class GF2 {
 		int[] outArray;
 		System.out.println("x.length: " + x.length);
 		System.out.println("y.length: " + y.length);
+		System.out.println("x: " + toString(x));
+		System.out.println("y: " + toString(y));
+
 		//finds if x is larger than y
 		if(x.length > y.length){
 			outArray = new int[x.length];
-			while(i < y.length - 1){
+			while(i < x.length - y.length){
 				outArray[i] = x[i++];
 			}
 			while(i < outArray.length){
@@ -114,11 +128,15 @@ public class GF2 {
 		}
 		else if(y.length > x.length){
 			outArray = new int[y.length];
-			while(i < x.length - 1){
+			System.out.println("outArray.length: " + outArray.length);
+
+			while(i < y.length - x.length){
 				outArray[i] = y[i++];
 			}
 
 			while(i < outArray.length){
+				System.out.println("i: " + i);
+				System.out.println("j: " + j);
 				outArray[i] = x[j++] + y[i++];
 
 			}		
@@ -143,7 +161,7 @@ public class GF2 {
 		//finds if x is larger than y
 		if(x.length > y.length){
 			outArray = new int[x.length];
-			while(i < y.length - 1){
+			while(i < x.length - y.length){
 				outArray[i] = x[i++] - 0;
 			}
 
@@ -155,7 +173,7 @@ public class GF2 {
 		}
 		else if(y.length > x.length){
 			outArray = new int[y.length];
-			while(i < x.length - 1){
+			while(i < y.length - x.length){
 				outArray[i] = 0 - y[i++];
 			}
 
@@ -242,11 +260,11 @@ public class GF2 {
 			//i = 2
 			while(i < a.length && a[i] == 0){
 				swap = true;
-				++i;
+				if(i++ == a.length - 1){
+					return new int[] {0};
+				}
 			}
-			if(a.length == 1 && swap){
-				return new int[] {0};
-			}
+
 			if(swap){
 				int[] newA = new int[a.length - i];
 				//a.length = 3 - 2 = 1;
@@ -287,13 +305,12 @@ public class GF2 {
 				//System.out.println("Loop" + i);
 				int[] tX = leadDivision(rX, dX);
 				//System.out.println("tX.length: " + tX.length);
-				//System.out.println(toString(tX)); //test
+				//System.out.println("tx: " + toString(tX)); //test
 				qX = addMod(qX, tX, p);
-				//System.out.println(toString(qX)); //test
 				rX = subtractMod(rX, multiply(tX, dX, p), p);	
-				//System.out.println(toString(rX)); //test
 				i++; //TEST
 			}
+			System.out.println("{qX, rX}: " + toString(qX) + ", " + toString(rX)); //test
 			return new int[][] {qX, rX};
 	    }
 	    public static int[] leadDivision(int[] rX, int[] dX){
@@ -347,8 +364,11 @@ public class GF2 {
     		System.out.println("aX: " + toString(aX));	    		
     		System.out.println("bX: " + toString(bX));
 	    	if(bX[0] == 0){
-	    		if(aX[0] != 1){
-	    			throw new IllegalArgumentException("aX[0] is not monic!!!");
+	    		System.out.println("1 / aX[0]: 1 /" + aX[0]);
+	    		if(1 % aX[0] != 0){
+	    			int s = EEA(1,aX[0])[0];
+	    			System.out.println("s: " + s);
+	    			return new int[][] {{s}, {0}};
 	    		}
 	    		return new int[][] {{1 / aX[0]}, {0}};//{[1/aX[0], 0]};  ///NNEEEEDDDSSSS FIXED
 	    	}
