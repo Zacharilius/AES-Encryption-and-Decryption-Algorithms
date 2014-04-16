@@ -1,0 +1,167 @@
+package projectAES;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class AES {
+
+	public static void main(String[] args) {
+		String[] sa = inputFile("input.txt");
+		System.out.println(toString(sa));
+		
+		//Make sa[0] a polynomial
+		System.out.println(sa[0]);
+		int[] mX = getPoly(sa[0]);
+		System.out.println(toString(mX));
+		
+		//Add into an array of size 16 every 2 bits for sa[1 through 3]
+		//sa[1] = key
+		int[] key = breakIntoPairs(sa[1]);
+		//sa[2] = plaintext
+		int[] plaintext = breakIntoPairs(sa[2]);
+		//sa[3] = ciphertext
+		int[] ciphertext = breakIntoPairs(sa[3]);
+		System.out.println("Key: " + toString(key));
+		System.out.println("Plaintext: " + toString(plaintext));
+		System.out.println("Ciphertext: " + toString(ciphertext));
+		
+		//Key Expansion
+		keyExpansion(key);
+	}
+    /** 
+    * inputFile Receives the parameter  filename that is the name of the file to be input.
+    * 
+    * @param fileName the name of the file to be input
+    *
+    * @return polynomial an array containing the polynomial
+    *
+    */
+	public static String[] inputFile(String fileName){
+		String[] sa = new String[4];
+		String line = "";
+		//Added to file location
+		fileName = "/Users/zacharybensley/Dropbox/COSC_620_SecurityInComputing/Assignments/8AES_Project/" + fileName;
+        try (BufferedReader in = new BufferedReader(new FileReader(fileName))) {
+            int i = 0;
+            while((line = in.readLine()) != null){
+            	//System.out.println("Line: " + line);
+                sa[i] = line;
+                i++;
+            }
+        }
+        catch (IOException e) {
+            System.out.println("inputFile() ERROR");
+        }
+        finally {
+            return sa;
+        }
+	}
+    /** 
+    * toString Receives an array and prints the polynomial according to the following format:
+    * ax^2 + bx + c = a b c
+    *
+    * @param int[] outArray The array to be formatted to a string
+    *
+    * @return A formatted string that represents the outArray polynomial
+    */
+    public static String toString(String[] outArray){
+    	String s = "";
+		for(int k = 0; k < outArray.length; k++){
+			s += outArray[k] + " ";
+		}
+		return s;
+    }
+    public static String toString(int[] outArray){
+    	String s = "";
+		for(int k = 0; k < outArray.length; k++){
+			s += outArray[k] + " ";
+		}
+		return s;
+    }
+	public static int[] getPoly(String unparsedPoly){
+		//get degree by counting spaces
+		int space = 0;
+		System.out.println(unparsedPoly.length());
+		for(int j = 0; j < unparsedPoly.length(); j++){
+			if(unparsedPoly.charAt(j) == ' ' && j + 1 < unparsedPoly.length()){
+				space++;
+			}
+		}
+		
+		//Create an array of size degree
+		int[] poly = new int[space + 1];
+		System.out.println("Poly Length: " + poly.length);
+		String[] sa = unparsedPoly.split(" ");
+		String stud = "";
+		for(String s: sa){
+			stud += s + " ";
+		}
+		//Fill array from size to 0 with unparsedPoly
+		for(int i = 0; i < space + 1; i++){
+			poly[i] = Integer.parseInt(sa[i]);
+		}
+		//return polyArray
+		return poly;
+	}
+	public static int[] breakIntoPairs(String unparsedPoly){
+		int[] outArray = new int[16];
+		int j = 0;
+		for(int i = 0; i < outArray.length; i++){
+			String hexNumber = unparsedPoly.substring(j, j+2);
+			outArray[i] = Integer.parseInt(hexNumber, 16);
+			j += 2;
+		}
+		return outArray;
+	}
+	public static int[] keyExpansion(int[] key){
+		String[] words = new String[44];
+		String temp = "";
+		for(int i = 0; i < 4; i++){
+			words[i] = (Integer.toHexString(key[4 * i])) + (Integer.toHexString(key[4 * i + 1])) +
+					(Integer.toHexString(key[4 * i + 2])) + (Integer.toHexString(key[4 * i + 3]));	
+		}
+		System.out.println(XOrStrings("7", "8"));
+		for(int j = 4; j < 44; j++){
+			temp = words[j - 1];
+			if(j % 4 == 0){
+				//temp = subWord(rotWord(temp)); //XOR with rCON(i/4);
+			}
+			words[j] = words[j - 4]; //xor with temp
+		}
+		
+		
+		return new int[] {};
+	}
+	public static String rotWord(String word){
+		String newWord = "";
+		String temp = word.substring(0, 1);
+		for(int i = 1; i < word.length(); i++){
+			newWord += word.substring(i, i + 1);
+		}
+		newWord += temp;
+		return newWord;
+		
+	}
+	public static String XOrStrings(String word1, String word2){
+		String newWord = "";
+		for(int i = 0; i < word1.length(); i += 2){
+			int word1Bin = (Integer.parseInt(word1.substring(i, i + 1), 16));
+			int word2Bin = (Integer.parseInt(word2.substring(i, i + 1), 16));
+			int result = word1Bin ^ word2Bin;
+			System.out.println(result);
+		}
+		
+		
+		return newWord;
+		
+	}
+	public static void rCon(){
+		
+		
+	}
+	public static void subWord(){
+		
+		
+	}
+}
