@@ -13,9 +13,11 @@ import java.util.logging.Logger;
 * @author Zachary Bensley
 */
 
-public class AES {
+public class AES{
 
 	public static void main(String[] args) {
+		int a = 2;
+		System.out.println((a++) + (a++) * (a++));
 		String[] sa = inputFile("input.txt");
 		System.out.println(toString(sa));
 		
@@ -131,7 +133,7 @@ public class AES {
 					(Integer.toHexString(key[4 * i + 2])) + (Integer.toHexString(key[4 * i + 3]));	
 		}
 		System.out.println(XOrStrings("7", "8"));
-		rCon(16);
+		System.out.println("rCon: " + rCon(12));
 		for(int j = 4; j < 44; j++){
 			temp = words[j - 1];
 			if(j % 4 == 0){
@@ -166,21 +168,33 @@ public class AES {
 		return newWord;
 		
 	}
-	public static void rCon(int i){
+	public static String rCon(int i){
 		int j = i / 4;
 		String s = "000000";
 		String jMult = Integer.toBinaryString(j);
-		System.out.println(jMult);
+		System.out.println("jMult: " + jMult);
 		int[] num2 = {1, 0};
-		int num = RC(j-1);
+		String strRC = RC(j);
 		//int[] RCX = multiply({2});
-		
+		return strRC;
 	}
-	private static int RC(int j){
+	private static String RC(int j){
 		//base case
 		if(j == 1){
-			return 1;	
+			return "1";	
 		}
+		//multiply binary representation of position j * position j -1
+		String s = "";
+		int[] two = {1, 0};
+		
+		return toString(multiply(two, convertIntToPoly(RC(j-1)), 2));
+	}
+	public static int[] convertIntToPoly(String binary){
+		int[] poly = new int[binary.length()];
+		for(int i = 0; i < binary.length(); i++){
+			poly[i] = Integer.parseInt(binary.substring(i, i+1));
+		}
+		return poly;
 		
 	}
 	public static void subWord(){
