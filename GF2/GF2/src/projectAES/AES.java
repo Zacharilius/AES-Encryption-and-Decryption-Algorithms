@@ -14,17 +14,15 @@ import java.util.logging.Logger;
 */
 
 public class AES{
-
+	private static int[] mX;
+	
 	public static void main(String[] args) {
-		int a = 2;
-		System.out.println((a++) + (a++) * (a++));
 		String[] sa = inputFile("input.txt");
 		System.out.println(toString(sa));
 		
 		//Make sa[0] a polynomial
 		System.out.println(sa[0]);
-		int[] mX = getPoly(sa[0]);
-		System.out.println(toString(mX));
+		mX = getPoly(sa[0]);
 		
 		//Add into an array of size 16 every 2 bits for sa[1 through 3]
 		//sa[1] = key
@@ -37,8 +35,23 @@ public class AES{
 		System.out.println("Plaintext: " + toString(plaintext));
 		System.out.println("Ciphertext: " + toString(ciphertext));
 		
+		
 		//Key Expansion
 		keyExpansion(key);
+		
+		/*
+		System.out.println("Testing: ");
+		mX = new int[] {1, 0, 0, 0,1,1,0,1,1};
+		System.out.println("Poly: " + toString(multiply(new int[] {1,0}, convertBinToPoly(Integer.toBinaryString(128)), 2)));
+		System.out.println("Hex: " + convertPolyToInt(PLDA(multiply(new int[] {1,0}, convertBinToPoly(Integer.toBinaryString(128)), 2),mX, 2)[1]));
+		System.out.println("mX: " + toString(mX));
+		System.out.println("PLDA: " + toString(PLDA(new int[] {1,0,0,0,0,0,0,0,0}, mX, 2)[1]));
+		System.out.println("PLDATest: " + toString(PLDA(new int[] {1,0,0,0,0,0,0,0,0}, new int[] {1, 0, 0, 0,1,1,0,1,1}, 2)[1]));
+		System.out.println("PLDATest2: " + convertPolyToInt(PLDA(new int[] {1,0,0,0,0,0,0,0,0}, new int[] {1, 0, 0, 0,1,1,0,1,1}, 2)[1]));
+		*/
+		//System.out.println("PLDATest: " + toString(PLDA(new int[] {2, 3, 1}, new int[] {1, 0, 1}, 3)[0]));
+
+
 	}
     /** 
     * inputFile Receives the parameter  filename that is the name of the file to be input.
@@ -132,8 +145,6 @@ public class AES{
 			words[i] = (Integer.toHexString(key[4 * i])) + (Integer.toHexString(key[4 * i + 1])) +
 					(Integer.toHexString(key[4 * i + 2])) + (Integer.toHexString(key[4 * i + 3]));	
 		}
-		System.out.println(XOrStrings("7", "8"));
-		System.out.println("rCon: " + rCon(12));
 		for(int j = 4; j < 44; j++){
 			temp = words[j - 1];
 			if(j % 4 == 0){
@@ -141,8 +152,7 @@ public class AES{
 			}
 			words[j] = words[j - 4]; //xor with temp
 		}
-		
-		
+		subWord(new int[] {0});
 		return new int[] {};
 	}
 	public static String rotWord(String word){
@@ -172,35 +182,115 @@ public class AES{
 		int j = i / 4;
 		String s = "000000";
 		String jMult = Integer.toBinaryString(j);
-		System.out.println("jMult: " + jMult);
-		int[] num2 = {1, 0};
-		String strRC = RC(j);
-		//int[] RCX = multiply({2});
-		return strRC;
+		int RC = RC(j);
+		String RC_Hex = Integer.toHexString(RC);
+ 
+		System.out.println("RC: " + RC);
+		return RC_Hex + s;
 	}
-	private static String RC(int j){
+	public static int RC(int j){
 		//base case
 		if(j == 1){
-			return "1";	
+			return 1;	
 		}
 		//multiply binary representation of position j * position j -1
-		String s = "";
 		int[] two = {1, 0};
-		
-		return toString(multiply(two, convertIntToPoly(RC(j-1)), 2));
+		return convertPolyToInt(PLDA(multiply(two, convertBinToPoly(Integer.toBinaryString(RC(j - 1))), 2), mX, 2)[1]);
 	}
-	public static int[] convertIntToPoly(String binary){
+	public static int[] convertBinToPoly(String binary){
 		int[] poly = new int[binary.length()];
 		for(int i = 0; i < binary.length(); i++){
 			poly[i] = Integer.parseInt(binary.substring(i, i+1));
 		}
+		//System.out.println("Poly: " + toString(poly));
 		return poly;
 		
 	}
-	public static void subWord(){
-		
-		
+
+	public static int convertPolyToInt(int[] poly){
+		String s = "";
+		for(int i = 0; i <poly.length; i++){
+			s+= poly[i];	
+		}
+		//System.out.println("s: " + s);
+
+		return Integer.parseInt(s, 2);
 	}
+	public static int[] hexPairToColVector(String hexPair){
+		String s = Integer.toBinaryString(Integer.parseInt(hexPair, 16));
+		System.out.println("s: " + s);
+		while(s.length() < 8){
+			s = "0" + s;
+		}
+		int[] outArray = convertBinToPoly(s);
+		System.out.println(toString(outArray));
+		return outArray;
+	}
+	public static void subWord(int[] words){
+		hexPairToColVector("11");
+		int[][] words2D = new int[1][8];
+		for(int i = 0; i < words.length; i++){
+			words2D[0][i] = words[i];
+			
+		}
+		int[][] testmatrix = 	{{0,0,0,0,0,0,0,0}};
+		
+		int[][] defaultMatrix=	{{1,1,1,1,1,0,0,0},
+								{0,1,1,1,1,1,0,0},
+								{0,0,1,1,1,1,1,0},
+								{0,0,0,1,1,1,1,1},
+								{1,0,0,0,1,1,1,1},
+								{1,1,0,0,0,1,1,1},
+								{1,1,1,0,0,0,1,1},
+								{1,1,1,1,0,0,0,1}};
+		
+		int[] addMatrix = 		{1,1,0,0,0,1,1,0};
+		
+		
+		System.out.println("defaultMatrix: \n" + toString(defaultMatrix));
+		System.out.println("testmatrix: \n" + toString(testmatrix));
+		System.out.println("addMatrix: \n" + toString(addMatrix));
+
+		int[]  multMatrix = matrixMultiplication(testmatrix, defaultMatrix, addMatrix);	
+		System.out.println("Out matrix: \n" + toString(multMatrix));
+	}
+    public static int[] matrixMultiplication(int[][] matrixA, int[][] matrixB, int[] addMatrix){
+    	int mA = matrixA.length;
+    	int nA = matrixA[0].length;
+    	int mB = matrixB.length;
+    	int nB = matrixB[0].length;
+    	
+    	//if(nA != mB) throw new RuntimeException("ERROR: Incorrect matrix dimensions");
+		int[][] matrixC = new int[mA][nB];
+		for(int i = 0; i < mA; i++){
+			for(int j = 0; j < nB; j++){
+				for(int k = 0; k < matrixB.length; k++){
+					matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
+				}
+    		}
+    	}
+		int[] outMatrix = new int[8];
+		System.out.println("Matrix c: \n" + toString(matrixC));
+		System.out.println("matrixC.length: " + matrixC[0].length);
+		for(int q = 0; q < matrixC[0].length; q++){
+			outMatrix[q] = (matrixC[0][q] + addMatrix[q]) % 2;
+		}
+    	return outMatrix;	
+    }
+    private static String toString(int[][] matrix){
+    	String outputString = "";
+    	for(int i = 0; i < matrix.length; i++){
+    		for(int j = 0; j < matrix[i].length; j++){
+    			outputString += matrix[i][j] + " ";
+    		
+    		}
+    		outputString += "\n";
+    	}
+    	
+    	
+    	return outputString;
+    
+    }
 	 /** 
     * add	adds the fX polynomial from the gX polynomial and then calls the
     * makeModPositive and removeLeadingZeroes on the product array.

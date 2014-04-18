@@ -20,7 +20,7 @@ public class GF2{
     */
 	public static void main(String[] args) {
 		//Input Files
-		String[] sa = inputFile("input2.txt");
+		String[] sa = inputFile("input3.txt");
 		
 		//Parse input file into correct variables
 		int p = Integer.parseInt(sa[0]); //prime number p
