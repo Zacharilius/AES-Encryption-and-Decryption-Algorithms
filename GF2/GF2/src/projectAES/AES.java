@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /** 
@@ -26,32 +29,30 @@ public class AES{
 		
 		//Add into an array of size 16 every 2 bits for sa[1 through 3]
 		//sa[1] = key
-		int[] key = breakIntoPairs(sa[1]);
+		String[] key = breakIntoPairs(sa[1]);
 		//sa[2] = plaintext
-		int[] plaintext = breakIntoPairs(sa[2]);
+		String[] plaintext = breakIntoPairs(sa[2]);
 		//sa[3] = ciphertext
-		int[] ciphertext = breakIntoPairs(sa[3]);
+		String[] ciphertext = breakIntoPairs(sa[3]);
 		System.out.println("Key: " + toString(key));
 		System.out.println("Plaintext: " + toString(plaintext));
 		System.out.println("Ciphertext: " + toString(ciphertext));
 		
-		
 		//Key Expansion
-		keyExpansion(key);
+		//System.out.println("Length: " + keyExpansion(key).length);
+
 		
-		/*
 		System.out.println("Testing: ");
-		mX = new int[] {1, 0, 0, 0,1,1,0,1,1};
-		System.out.println("Poly: " + toString(multiply(new int[] {1,0}, convertBinToPoly(Integer.toBinaryString(128)), 2)));
-		System.out.println("Hex: " + convertPolyToInt(PLDA(multiply(new int[] {1,0}, convertBinToPoly(Integer.toBinaryString(128)), 2),mX, 2)[1]));
-		System.out.println("mX: " + toString(mX));
-		System.out.println("PLDA: " + toString(PLDA(new int[] {1,0,0,0,0,0,0,0,0}, mX, 2)[1]));
-		System.out.println("PLDATest: " + toString(PLDA(new int[] {1,0,0,0,0,0,0,0,0}, new int[] {1, 0, 0, 0,1,1,0,1,1}, 2)[1]));
-		System.out.println("PLDATest2: " + convertPolyToInt(PLDA(new int[] {1,0,0,0,0,0,0,0,0}, new int[] {1, 0, 0, 0,1,1,0,1,1}, 2)[1]));
-		*/
-		//System.out.println("PLDATest: " + toString(PLDA(new int[] {2, 3, 1}, new int[] {1, 0, 1}, 3)[0]));
-
-
+		//String[] testKey = breakIntoPairs("0f1571c947d9e8590cb7add6af7f6798");
+		//System.out.println(toString(keyExpansion(testKey)));
+		String s = "af7f6798";
+		System.out.println(s);
+		System.out.println("rotWord: " + toString(rotWord(s)));
+		System.out.println("subWord: " + subWord(rotWord(s)));
+		System.out.println("rCon: " + rCon(4));
+		System.out.println("XOR: " + XORStrings("10", "2"));
+		System.out.println("XOR: " + XORStrings("1000000", "d2854679"));
+		
 	}
     /** 
     * inputFile Receives the parameter  filename that is the name of the file to be input.
@@ -128,60 +129,75 @@ public class AES{
 		//return polyArray
 		return poly;
 	}
-	public static int[] breakIntoPairs(String unparsedPoly){
-		int[] outArray = new int[16];
+	public static String[] breakIntoPairs(String unparsedPoly){
+		String[] outArray = new String[16];
 		int j = 0;
 		for(int i = 0; i < outArray.length; i++){
-			String hexNumber = unparsedPoly.substring(j, j+2);
-			outArray[i] = Integer.parseInt(hexNumber, 16);
+			outArray[i] = unparsedPoly.substring(j, j+2);
 			j += 2;
 		}
 		return outArray;
 	}
-	public static int[] keyExpansion(int[] key){
+	public static String[] keyExpansion(String[] key){
 		String[] words = new String[44];
 		String temp = "";
 		for(int i = 0; i < 4; i++){
-			words[i] = (Integer.toHexString(key[4 * i])) + (Integer.toHexString(key[4 * i + 1])) +
-					(Integer.toHexString(key[4 * i + 2])) + (Integer.toHexString(key[4 * i + 3]));	
+			words[i] = key[4 * i] + key[4 * i + 1] + key[4 * i + 2] + key[4 * i + 3];	
 		}
 		for(int j = 4; j < 44; j++){
 			temp = words[j - 1];
 			if(j % 4 == 0){
-				//temp = subWord(rotWord(temp)); //XOR with rCON(i/4);
+				temp = XORStrings(subWord(rotWord(temp)), rCon(j)); //XOR with rCON(i/4);
 			}
 			words[j] = words[j - 4]; //xor with temp
 		}
-		subWord(new int[] {0});
-		return new int[] {};
+		return words;
 	}
-	public static String rotWord(String word){
-		String newWord = "";
-		String temp = word.substring(0, 1);
-		for(int i = 1; i < word.length(); i++){
-			newWord += word.substring(i, i + 1);
-		}
-		newWord += temp;
-		return newWord;
+	public static String[] rotWord(String wordStr){
+		String[] word = new String[4];
+		word[0] = wordStr.substring(0, 2);
+		word[1] = wordStr.substring(2, 4);
+		word[2] = wordStr.substring(4, 6);
+		word[3] = wordStr.substring(6, 8);
+
 		
+		String temp = word[0];
+		for(int i = 0; i < word.length - 1; i++){
+			word[i] = word[i+1];
+		}
+		word[3] = temp;
+		return word;
 	}
-	public static String XOrStrings(String word1, String word2){
-		String newWord = "";
+	public static String XORStrings(String word1, String word2){
+		String outWord = "";
+		
+		while(word1.length() > word2.length()){
+			word2 = "0" + word2;
+		}
+		while(word2.length() > word1.length()){
+			word1 = "0" + word1;
+		}
+		for(int i = 0; i < word1.length() - 1; i += 2){
+			outWord += Integer.toHexString(Integer.parseInt(word1.substring(i, i + 2), 16) ^ Integer.parseInt(word2.substring(i, i + 2), 16));
+			
+		}
+		//newWord = Integer.toString(Integer.parseInt(word1, 16) ^ Integer.parseInt(word2, 16));
+
+		/*
 		for(int i = 0; i < word1.length(); i += 2){
 			int word1Bin = (Integer.parseInt(word1.substring(i, i + 1), 16));
 			int word2Bin = (Integer.parseInt(word2.substring(i, i + 1), 16));
 			int result = word1Bin ^ word2Bin;
 			System.out.println(result);
-		}
-		
-		
-		return newWord;
+		}	
+		*/
+		return outWord;
 		
 	}
 	public static String rCon(int i){
 		int j = i / 4;
 		String s = "000000";
-		String jMult = Integer.toBinaryString(j);
+//		String jMult = Integer.toBinaryString(j);
 		int RC = RC(j);
 		String RC_Hex = Integer.toHexString(RC);
  
@@ -223,36 +239,75 @@ public class AES{
 			s = "0" + s;
 		}
 		int[] outArray = convertBinToPoly(s);
-		System.out.println(toString(outArray));
+		System.out.println("outArray: " + toString(outArray));
+		/*
+		for(int i = 0; i < outArray.length / 2; i++) {
+			  int temp = outArray[i];
+			  outArray[i] = outArray[outArray.length - 1 - i];
+			  outArray[outArray.length - 1 - i] = temp;
+			}
+		System.out.println("outArray: " + toString(outArray));
+		*/
 		return outArray;
 	}
-	public static void subWord(int[] words){
-		hexPairToColVector("11");
-		int[][] words2D = new int[1][8];
-		for(int i = 0; i < words.length; i++){
-			words2D[0][i] = words[i];
-			
-		}
-		int[][] testmatrix = 	{{0,0,0,0,0,0,0,0}};
-		
+	public static String subWord(String[] words){
 		int[][] defaultMatrix=	{{1,1,1,1,1,0,0,0},
-								{0,1,1,1,1,1,0,0},
-								{0,0,1,1,1,1,1,0},
-								{0,0,0,1,1,1,1,1},
-								{1,0,0,0,1,1,1,1},
-								{1,1,0,0,0,1,1,1},
-								{1,1,1,0,0,0,1,1},
-								{1,1,1,1,0,0,0,1}};
-		
-		int[] addMatrix = 		{1,1,0,0,0,1,1,0};
-		
-		
-		System.out.println("defaultMatrix: \n" + toString(defaultMatrix));
-		System.out.println("testmatrix: \n" + toString(testmatrix));
-		System.out.println("addMatrix: \n" + toString(addMatrix));
+				{0,1,1,1,1,1,0,0},
+				{0,0,1,1,1,1,1,0},
+				{0,0,0,1,1,1,1,1},
+				{1,0,0,0,1,1,1,1},
+				{1,1,0,0,0,1,1,1},
+				{1,1,1,0,0,0,1,1},
+				{1,1,1,1,0,0,0,1}};
 
-		int[]  multMatrix = matrixMultiplication(testmatrix, defaultMatrix, addMatrix);	
-		System.out.println("Out matrix: \n" + toString(multMatrix));
+		int[] addMatrix = 		{1,1,0,0,0,1,1,0};	
+		System.out.println("Start: " + toString(words));
+		
+		
+		int[][] columnVec = new int[1][8];
+		for(int i = 0; i < words.length; i++){
+			columnVec[0][i] = Integer.parseInt(words[i],16);
+		}
+		//System.out.println("cV: " + toString(columnVec[0]));
+		
+		//System.out.println("defaultMatrix: \n" + toString(defaultMatrix));
+		//System.out.println("columnVec: \n" + toString(columnVec));
+		//System.out.println("addMatrix: \n" + toString(addMatrix));
+
+		int[]  multMatrix = matrixMultiplication(columnVec, defaultMatrix, addMatrix);	
+		//System.out.println("Out matrix: \n" + toString(multMatrix));
+		
+		String s = "";
+		for(int j = multMatrix.length - 1; j >= 0; j--){
+			s += multMatrix[j];
+		}
+		return Integer.toHexString(Integer.parseInt(s, 2));
+
+	}
+	public static void inverseSubWord(int[] words){		
+		int[][] columnVec = new int[1][8];
+		for(int i = 0; i < words.length; i++){
+			columnVec[0][i] = words[i];
+		}
+		
+		int[][] defaultMatrix=	{{0,1,0,1,0,0,1,0},
+								{0,0,1,0,1,0,0,1},
+								{1,0,0,1,0,1,0,0},
+								{0,1,0,0,1,0,1,0},
+								{0,0,1,0,0,1,0,1},
+								{1,0,0,1,0,0,1,0},
+								{0,1,0,0,1,0,0,1},
+								{1,0,1,0,0,1,0,0}};
+		
+		int[] addMatrix = 		{1,0,1,0,0,0,0,0};
+		
+		
+		//System.out.println("defaultMatrix: \n" + toString(defaultMatrix));
+		//System.out.println("columnVec: \n" + toString(columnVec));
+		//System.out.println("addMatrix: \n" + toString(addMatrix));
+
+		int[]  multMatrix = matrixMultiplication(columnVec, defaultMatrix, addMatrix);	
+		//System.out.println("Out matrix: \n" + toString(multMatrix));
 	}
     public static int[] matrixMultiplication(int[][] matrixA, int[][] matrixB, int[] addMatrix){
     	int mA = matrixA.length;
@@ -261,23 +316,20 @@ public class AES{
     	int nB = matrixB[0].length;
     	
     	//if(nA != mB) throw new RuntimeException("ERROR: Incorrect matrix dimensions");
-		int[][] matrixC = new int[mA][nB];
-		for(int i = 0; i < mA; i++){
-			for(int j = 0; j < nB; j++){
-				for(int k = 0; k < matrixB.length; k++){
-					matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
-				}
+		int[][] matrixC = new int[1][8];
+		for(int i = 0; i < mB; i++){
+			for(int j = 0; j < nA; j++){
+				matrixC[0][i] += matrixA[0][j] * matrixB[i][j];
     		}
     	}
 		int[] outMatrix = new int[8];
-		System.out.println("Matrix c: \n" + toString(matrixC));
-		System.out.println("matrixC.length: " + matrixC[0].length);
+		//System.out.println("Matrix c: \n" + toString(matrixC));
 		for(int q = 0; q < matrixC[0].length; q++){
 			outMatrix[q] = (matrixC[0][q] + addMatrix[q]) % 2;
 		}
     	return outMatrix;	
     }
-    private static String toString(int[][] matrix){
+    public static String toString(int[][] matrix){
     	String outputString = "";
     	for(int i = 0; i < matrix.length; i++){
     		for(int j = 0; j < matrix[i].length; j++){

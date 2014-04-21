@@ -1,8 +1,13 @@
+package projectAES;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 /** 
@@ -11,45 +16,40 @@ import java.util.logging.Logger;
 * @author Zachary Bensley
 */
 
-public class GF2{
-    /** 
-    * The main method for the GF2 class
-    * 
-    *
-    * @param args is a String array that is not used in this program
-    */
+public class AES{
+	private static int[] mX;
+	
 	public static void main(String[] args) {
-		//Input Files
 		String[] sa = inputFile("input.txt");
+		System.out.println(toString(sa));
 		
-		//Parse input file into correct variables
-		int p = Integer.parseInt(sa[0]); //prime number p
-		int mXDegree = Integer.parseInt(sa[1]); //degree of irreducible polynomial
-		int[] mX = getPoly(mXDegree, sa[2]); //coefficients of m(x) from leading to constant
-		int fXDegree = Integer.parseInt(sa[3]); //degree of f(x)
-		int[] fX = getPoly(fXDegree, sa[4]); // coefficients of f(x),from leading coefficient to the constant
-		int gXDegree = Integer.parseInt(sa[5]); //degree of g(x)
-		int[] gX = getPoly(gXDegree, sa[6]); // coefficients of g(x),from leading coefficient to the constant
+		//Make sa[0] a polynomial
+		System.out.println(sa[0]);
+		mX = getPoly(sa[0]);
 		
-		//Get output
-		String outputText = "";
-		outputText += toString(PLDA(add(fX, gX, p), mX, p)[1]) + "\n";		
-		outputText += toString(PLDA(subtract(fX, gX, p),mX, p)[1]) + "\n";
-		outputText += toString(PLDA(multiply(fX, gX, p),mX, p)[1]) + "\n";
-		outputText += toString(PLDA(multiply(fX, EEAP(gX, mX, p)[0], p),mX, p)[1]) + "\n";
-		//System.out.println(outputText);
-		outputFile(outputText);
+		//Add into an array of size 16 every 2 bits for sa[1 through 3]
+		//sa[1] = key
+		String[] key = breakIntoPairs(sa[1]);
+		//sa[2] = plaintext
+		String[] plaintext = breakIntoPairs(sa[2]);
+		//sa[3] = ciphertext
+		String[] ciphertext = breakIntoPairs(sa[3]);
+		System.out.println("Key: " + toString(key));
+		System.out.println("Plaintext: " + toString(plaintext));
+		System.out.println("Ciphertext: " + toString(ciphertext));
 		
-		//TESTING
-		//System.out.println("Testing: ");
-		int[] fTestX = {1, 1};
-		int[] gTestX = {2, 1};
-		int[] mTestX = {1,0,1};
-		int pTest = 3;
-		//Division 
-		//int[][] temp = EEAP(gTestX, mTestX, pTest);
-		//System.out.println("EEAP[0]" + toString(temp[0])+ "\n");
-		//System.out.println("EEAP[1]" + toString(temp[1])+ "\n");
+		//Key Expansion
+		//System.out.println("Length: " + keyExpansion(key).length);
+
+		
+		System.out.println("Testing: ");
+		//String[] testKey = breakIntoPairs("0f1571c947d9e8590cb7add6af7f6798");
+		//System.out.println(toString(keyExpansion(testKey)));
+		String s = "af7f6798";
+		System.out.println(s);
+		System.out.println("rotWord: " + toString(rotWord(s)));
+		System.out.println("subWord: " + subWord(rotWord(s)));
+		System.out.println("rCon: " + rCon(1));
 
 	}
     /** 
@@ -61,10 +61,10 @@ public class GF2{
     *
     */
 	public static String[] inputFile(String fileName){
-		String[] sa = new String[7];
+		String[] sa = new String[4];
 		String line = "";
 		//Added to file location
-		fileName = fileName;
+		fileName = "/Users/zacharybensley/Dropbox/COSC_620_SecurityInComputing/Assignments/8AES_Project/" + fileName;
         try (BufferedReader in = new BufferedReader(new FileReader(fileName))) {
             int i = 0;
             while((line = in.readLine()) != null){
@@ -81,32 +81,254 @@ public class GF2{
         }
 	}
     /** 
-    * getPoly gets the degree and an unparsed Poly string that is received from the input file
-    * 
+    * toString Receives an array and prints the polynomial according to the following format:
+    * ax^2 + bx + c = a b c
     *
-    * @param degree an integer with the polynomial degree 
-    * @param unparsedPoly a string that contains the unparsed polynomial
+    * @param int[] outArray The array to be formatted to a string
     *
-    * @return polynomial an array containing the polynomial
+    * @return A formatted string that represents the outArray polynomial
     */
-	public static int[] getPoly(int degree, String unparsedPoly){
-		//Create an array of size degree
-		int[] poly = new int[degree + 1];
+    public static String toString(String[] outArray){
+    	String s = "";
+		for(int k = 0; k < outArray.length; k++){
+			s += outArray[k] + " ";
+		}
+		return s;
+    }
+    public static String toString(int[] outArray){
+    	String s = "";
+		for(int k = 0; k < outArray.length; k++){
+			s += outArray[k] + " ";
+		}
+		return s;
+    }
+	public static int[] getPoly(String unparsedPoly){
+		//get degree by counting spaces
+		int space = 0;
+		System.out.println(unparsedPoly.length());
+		for(int j = 0; j < unparsedPoly.length(); j++){
+			if(unparsedPoly.charAt(j) == ' ' && j + 1 < unparsedPoly.length()){
+				space++;
+			}
+		}
 		
+		//Create an array of size degree
+		int[] poly = new int[space + 1];
+		System.out.println("Poly Length: " + poly.length);
 		String[] sa = unparsedPoly.split(" ");
 		String stud = "";
 		for(String s: sa){
 			stud += s + " ";
 		}
-			//System.out.println(stud);
 		//Fill array from size to 0 with unparsedPoly
-		for(int i = 0; i <= degree; i++){
+		for(int i = 0; i < space + 1; i++){
 			poly[i] = Integer.parseInt(sa[i]);
 		}
 		//return polyArray
 		return poly;
 	}
-    /** 
+	public static String[] breakIntoPairs(String unparsedPoly){
+		String[] outArray = new String[16];
+		int j = 0;
+		for(int i = 0; i < outArray.length; i++){
+			outArray[i] = unparsedPoly.substring(j, j+2);
+			j += 2;
+		}
+		return outArray;
+	}
+	public static String[] keyExpansion(String[] key){
+		String[] words = new String[44];
+		String temp = "";
+		for(int i = 0; i < 4; i++){
+			words[i] = key[4 * i] + key[4 * i + 1] + key[4 * i + 2] + key[4 * i + 3];	
+		}
+		for(int j = 4; j < 44; j++){
+			temp = words[j - 1];
+			if(j % 4 == 0){
+				temp = XORStrings(subWord(rotWord(temp)), rCon(j)); //XOR with rCON(i/4);
+			}
+			words[j] = words[j - 4]; //xor with temp
+		}
+		return words;
+	}
+	public static String[] rotWord(String wordStr){
+		String[] word = new String[4];
+		word[0] = wordStr.substring(0, 2);
+		word[1] = wordStr.substring(2, 4);
+		word[2] = wordStr.substring(4, 6);
+		word[3] = wordStr.substring(6, 8);
+
+		
+		String temp = word[0];
+		for(int i = 0; i < word.length - 1; i++){
+			word[i] = word[i+1];
+		}
+		word[3] = temp;
+		return word;
+	}
+	public static String XORStrings(String word1, String word2){
+		String newWord = "";
+		for(int i = 0; i < word1.length(); i += 2){
+			int word1Bin = (Integer.parseInt(word1.substring(i, i + 1), 16));
+			int word2Bin = (Integer.parseInt(word2.substring(i, i + 1), 16));
+			int result = word1Bin ^ word2Bin;
+			System.out.println(result);
+		}
+		
+		
+		return newWord;
+		
+	}
+	public static String rCon(int i){
+		int j = i / 4;
+		String s = "000000";
+//		String jMult = Integer.toBinaryString(j);
+		int RC = RC(j);
+		String RC_Hex = Integer.toHexString(RC);
+ 
+		System.out.println("RC: " + RC);
+		return RC_Hex + s;
+	}
+	public static int RC(int j){
+		//base case
+		if(j == 1){
+			return 1;	
+		}
+		//multiply binary representation of position j * position j -1
+		int[] two = {1, 0};
+		return convertPolyToInt(PLDA(multiply(two, convertBinToPoly(Integer.toBinaryString(RC(j - 1))), 2), mX, 2)[1]);
+	}
+	public static int[] convertBinToPoly(String binary){
+		int[] poly = new int[binary.length()];
+		for(int i = 0; i < binary.length(); i++){
+			poly[i] = Integer.parseInt(binary.substring(i, i+1));
+		}
+		//System.out.println("Poly: " + toString(poly));
+		return poly;
+		
+	}
+
+	public static int convertPolyToInt(int[] poly){
+		String s = "";
+		for(int i = 0; i <poly.length; i++){
+			s+= poly[i];	
+		}
+		//System.out.println("s: " + s);
+
+		return Integer.parseInt(s, 2);
+	}
+	public static int[] hexPairToColVector(String hexPair){
+		String s = Integer.toBinaryString(Integer.parseInt(hexPair, 16));
+		System.out.println("s: " + s);
+		while(s.length() < 8){
+			s = "0" + s;
+		}
+		int[] outArray = convertBinToPoly(s);
+		System.out.println("outArray: " + toString(outArray));
+		/*
+		for(int i = 0; i < outArray.length / 2; i++) {
+			  int temp = outArray[i];
+			  outArray[i] = outArray[outArray.length - 1 - i];
+			  outArray[outArray.length - 1 - i] = temp;
+			}
+		System.out.println("outArray: " + toString(outArray));
+		*/
+		return outArray;
+	}
+	public static String subWord(String[] words){	
+		System.out.println("Start: " + toString(words));
+		int[][] columnVec = new int[1][8];
+		for(int i = 0; i < words.length; i++){
+			columnVec[0][i] = Integer.parseInt(words[i],16);
+		}
+		System.out.println("cV: " + toString(columnVec[0]));
+		
+		int[][] defaultMatrix=	{{1,1,1,1,1,0,0,0},
+								{0,1,1,1,1,1,0,0},
+								{0,0,1,1,1,1,1,0},
+								{0,0,0,1,1,1,1,1},
+								{1,0,0,0,1,1,1,1},
+								{1,1,0,0,0,1,1,1},
+								{1,1,1,0,0,0,1,1},
+								{1,1,1,1,0,0,0,1}};
+		
+		int[] addMatrix = 		{1,1,0,0,0,1,1,0};
+		
+		
+		System.out.println("defaultMatrix: \n" + toString(defaultMatrix));
+		System.out.println("columnVec: \n" + toString(columnVec));
+		System.out.println("addMatrix: \n" + toString(addMatrix));
+
+		int[]  multMatrix = matrixMultiplication(columnVec, defaultMatrix, addMatrix);	
+		System.out.println("Out matrix: \n" + toString(multMatrix));
+		
+		String s = "";
+		for(int j = multMatrix.length - 1; j >= 0; j--){
+			s += multMatrix[j];
+		}
+		return Integer.toHexString(Integer.parseInt(s, 2));
+
+	}
+	public static void inverseSubWord(int[] words){		
+		int[][] columnVec = new int[1][8];
+		for(int i = 0; i < words.length; i++){
+			columnVec[0][i] = words[i];
+		}
+		
+		int[][] defaultMatrix=	{{0,1,0,1,0,0,1,0},
+								{0,0,1,0,1,0,0,1},
+								{1,0,0,1,0,1,0,0},
+								{0,1,0,0,1,0,1,0},
+								{0,0,1,0,0,1,0,1},
+								{1,0,0,1,0,0,1,0},
+								{0,1,0,0,1,0,0,1},
+								{1,0,1,0,0,1,0,0}};
+		
+		int[] addMatrix = 		{1,0,1,0,0,0,0,0};
+		
+		
+		System.out.println("defaultMatrix: \n" + toString(defaultMatrix));
+		System.out.println("columnVec: \n" + toString(columnVec));
+		System.out.println("addMatrix: \n" + toString(addMatrix));
+
+		int[]  multMatrix = matrixMultiplication(columnVec, defaultMatrix, addMatrix);	
+		System.out.println("Out matrix: \n" + toString(multMatrix));
+	}
+    public static int[] matrixMultiplication(int[][] matrixA, int[][] matrixB, int[] addMatrix){
+    	int mA = matrixA.length;
+    	int nA = matrixA[0].length;
+    	int mB = matrixB.length;
+    	int nB = matrixB[0].length;
+    	
+    	//if(nA != mB) throw new RuntimeException("ERROR: Incorrect matrix dimensions");
+		int[][] matrixC = new int[1][8];
+		for(int i = 0; i < mB; i++){
+			for(int j = 0; j < nA; j++){
+				matrixC[0][i] += matrixA[0][j] * matrixB[i][j];
+    		}
+    	}
+		int[] outMatrix = new int[8];
+		System.out.println("Matrix c: \n" + toString(matrixC));
+		for(int q = 0; q < matrixC[0].length; q++){
+			outMatrix[q] = (matrixC[0][q] + addMatrix[q]) % 2;
+		}
+    	return outMatrix;	
+    }
+    public static String toString(int[][] matrix){
+    	String outputString = "";
+    	for(int i = 0; i < matrix.length; i++){
+    		for(int j = 0; j < matrix[i].length; j++){
+    			outputString += matrix[i][j] + " ";
+    		
+    		}
+    		outputString += "\n";
+    	}
+    	
+    	
+    	return outputString;
+    
+    }
+	 /** 
     * add	adds the fX polynomial from the gX polynomial and then calls the
     * makeModPositive and removeLeadingZeroes on the product array.
     *
@@ -302,21 +524,6 @@ public class GF2{
 			}
 			return a;
 	    }
-	    /** 
-	    * toString Receives an array and prints the polynomial according to the following format:
-	    * ax^2 + bx + c = a b c
-	    *
-	    * @param int[] outArray The array to be formatted to a string
-	    *
-	    * @return A formatted string that represents the outArray polynomial
-	    */
-	    public static String toString(int[] outArray){
-	    	String s = "";
-			for(int k = 0; k < outArray.length; k++){
-				s += outArray[k] + " ";
-			}
-			return s;
-	    }
 
 	    /**
 	    * PLDA (Polynomial long division algorithm) over GF(p)
@@ -420,10 +627,10 @@ public class GF2{
 		public static void outputFile(String outputString){
 	        PrintWriter out = null;
 	        try {
-	            out = new PrintWriter("output.txt");
+	            out = new PrintWriter("outputTest.txt");
 	            out.print(outputString);
 	        } catch (FileNotFoundException ex) {
-	            Logger.getLogger(GF2.class.getName()).log(Level.SEVERE, null, ex);
+	            Logger.getLogger(AES.class.getName()).log(Level.SEVERE, null, ex);
 	        } finally {
 	            out.close();
 	        }
