@@ -50,6 +50,10 @@ public class GF2{
 		//int[][] temp = EEAP(gTestX, mTestX, pTest);
 		//System.out.println("EEAP[0]" + toString(temp[0])+ "\n");
 		//System.out.println("EEAP[1]" + toString(temp[1])+ "\n");
+		int[] mX2 = {1,0,0,0,1,1,0,1,1};
+		int[] gX2 = {1,1,1,1,0,1,1};
+		System.out.println(toString(EEAP(gX2, mX2, 2)[0]));
+		System.out.println(toString(PLDA(EEAP(gX2, mX2, 2)[0], mX2, 2)[1]));
 
 	}
     /** 
